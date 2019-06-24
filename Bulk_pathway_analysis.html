@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Svandis Saemundsdottir" />
+
+
+<title>Bulk pahtway analysis</title>
+
+<script src="Bulk_pathway_analysis_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="Bulk_pathway_analysis_files/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="Bulk_pathway_analysis_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="Bulk_pathway_analysis_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="Bulk_pathway_analysis_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="Bulk_pathway_analysis_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="Bulk_pathway_analysis_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="Bulk_pathway_analysis_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="Bulk_pathway_analysis_files/navigation-1.1/tabsets.js"></script>
+<script src="Bulk_pathway_analysis_files/navigation-1.1/codefolding.js"></script>
+<link href="Bulk_pathway_analysis_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="Bulk_pathway_analysis_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #ffffff; color: #1f1c1b; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; background-color: #ffffff; color: #a0a0a0; border-right: 1px solid #a0a0a0; }
+td.sourceCode { padding-left: 5px; }
+pre, code { color: #1f1c1b; background-color: #ffffff; }
+code > span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+code > span.dt { color: #0057ae; } /* DataType */
+code > span.dv { color: #b08000; } /* DecVal */
+code > span.bn { color: #b08000; } /* BaseN */
+code > span.fl { color: #b08000; } /* Float */
+code > span.cn { color: #aa5500; } /* Constant */
+code > span.ch { color: #924c9d; } /* Char */
+code > span.sc { color: #3daee9; } /* SpecialChar */
+code > span.st { color: #bf0303; } /* String */
+code > span.vs { color: #bf0303; } /* VerbatimString */
+code > span.ss { color: #ff5500; } /* SpecialString */
+code > span.im { color: #ff5500; } /* Import */
+code > span.co { color: #898887; } /* Comment */
+code > span.do { color: #607880; } /* Documentation */
+code > span.an { color: #ca60ca; } /* Annotation */
+code > span.cv { color: #0095ff; } /* CommentVar */
+code > span.ot { color: #006e28; } /* Other */
+code > span.fu { color: #644a9b; } /* Function */
+code > span.va { color: #0057ae; } /* Variable */
+code > span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #1f1c1b; } /* Operator */
+code > span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+code > span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+code > span.pp { color: #006e28; } /* Preprocessor */
+code > span.at { color: #0057ae; } /* Attribute */
+code > span.re { color: #0057ae; } /* RegionMarker */
+code > span.in { color: #b08000; } /* Information */
+code > span.wa { color: #bf0303; } /* Warning */
+code > span.al { color: #bf0303; font-weight: bold; } /* Alert */
+code > span.er { color: #bf0303; text-decoration: underline; } /* Error */
+code > span. { color: #1f1c1b; } /* Normal */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="assets/lab.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Bulk pahtway analysis</h1>
+<h4 class="author">Svandis Saemundsdottir</h4>
+<h4 class="date">6/24/2019</h4>
+
+</div>
+
+
+<p>This is a step by step my pathway analysis of the bulk sequencing of reprogrammed mouse dendritic cells</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(edgeR)
+<span class="kw">library</span>(pheatmap)
+<span class="kw">library</span>(genefilter)
+<span class="kw">library</span>(clusterProfiler)
+<span class="kw">library</span>(org.Mm.eg.db)
+<span class="kw">library</span>(gplots)
+<span class="kw">library</span>(ggplot2)</code></pre></div>
+<div id="read-in-the-data-and-remove-sampels-that-were-irregular-according-to-correlation" class="section level2">
+<h2>Read in the data and remove sampels that were irregular according to correlation:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">counts &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="st">&quot;~/Documents/Lund/Vor2018_Haust2014/Data/count_results_3/entrenzID.final.matrix.txt&quot;</span>, <span class="dt">row.names =</span> <span class="dv">1</span>)
+counts &lt;-<span class="st"> </span>counts[<span class="kw">c</span>(<span class="dv">38</span><span class="op">:</span><span class="dv">44</span>,<span class="dv">21</span><span class="op">:</span><span class="dv">37</span>,<span class="dv">13</span><span class="op">:</span><span class="dv">20</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>,<span class="dv">45</span><span class="op">:</span><span class="dv">48</span>)]
+counts &lt;-<span class="st"> </span>counts[<span class="op">-</span><span class="kw">c</span>(<span class="dv">4</span>, <span class="dv">6</span>,<span class="dv">10</span>,<span class="dv">14</span>,<span class="dv">18</span>,<span class="dv">22</span>,<span class="dv">34</span>,<span class="dv">37</span>,<span class="dv">39</span><span class="op">:</span><span class="dv">40</span>,<span class="dv">45</span>)]
+sampleCondition &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="st">&quot;mef&quot;</span>, <span class="dv">5</span>), <span class="kw">rep</span>(<span class="st">&quot;day_5&quot;</span>, <span class="dv">4</span>), 
+                     <span class="kw">rep</span>(<span class="st">&quot;day_7&quot;</span>, <span class="dv">3</span>), <span class="kw">rep</span>(<span class="st">&quot;day_8&quot;</span>, <span class="dv">3</span>), <span class="kw">rep</span>(<span class="st">&quot;day_9&quot;</span>, <span class="dv">3</span>),
+                     <span class="kw">rep</span>(<span class="st">&quot;day_11&quot;</span>, <span class="dv">4</span>), <span class="kw">rep</span>(<span class="st">&quot;day_15&quot;</span>, <span class="dv">4</span>), 
+                     <span class="kw">rep</span>(<span class="st">&quot;cDC1&quot;</span>,<span class="dv">4</span>), <span class="kw">rep</span>(<span class="st">&quot;cDC2&quot;</span>, <span class="dv">4</span>), <span class="kw">rep</span>(<span class="st">&quot;pDC&quot;</span>, <span class="dv">3</span>))
+<span class="kw">head</span>(counts)</code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Mef_R_1_S3"],"name":[1],"type":["int"],"align":["right"]},{"label":["Mef_R_1_S5"],"name":[2],"type":["int"],"align":["right"]},{"label":["Mef_R_1_S6"],"name":[3],"type":["int"],"align":["right"]},{"label":["Mef_R_2_S4"],"name":[4],"type":["int"],"align":["right"]},{"label":["Mef_R_3_S2"],"name":[5],"type":["int"],"align":["right"]},{"label":["idcs_d5_r1_S10"],"name":[6],"type":["int"],"align":["right"]},{"label":["idcs_d5_r1_S11"],"name":[7],"type":["int"],"align":["right"]},{"label":["idcs_d5_R3_S8"],"name":[8],"type":["int"],"align":["right"]},{"label":["idcs_d5_R3_S9"],"name":[9],"type":["int"],"align":["right"]},{"label":["idcs_d7_r1_S15"],"name":[10],"type":["int"],"align":["right"]},{"label":["idcs_d7_r3_S14"],"name":[11],"type":["int"],"align":["right"]},{"label":["idcs_d7_r3_S16"],"name":[12],"type":["int"],"align":["right"]},{"label":["idcs_d8_r1_S19"],"name":[13],"type":["int"],"align":["right"]},{"label":["idcs_d8_r3_S17"],"name":[14],"type":["int"],"align":["right"]},{"label":["idcs_d8_r3_S18"],"name":[15],"type":["int"],"align":["right"]},{"label":["idcs_d9_r1_S21"],"name":[16],"type":["int"],"align":["right"]},{"label":["idcs_d9_r3_S22"],"name":[17],"type":["int"],"align":["right"]},{"label":["idcs_d9_r3_S23"],"name":[18],"type":["int"],"align":["right"]},{"label":["idcs_d11_r1_S28"],"name":[19],"type":["int"],"align":["right"]},{"label":["idcs_d11_r2_S25"],"name":[20],"type":["int"],"align":["right"]},{"label":["idcs_d11_r3_S26"],"name":[21],"type":["int"],"align":["right"]},{"label":["idcs_d11_r3_S27"],"name":[22],"type":["int"],"align":["right"]},{"label":["idcs_d15_r1_S29"],"name":[23],"type":["int"],"align":["right"]},{"label":["idcs_d15_r2_S31"],"name":[24],"type":["int"],"align":["right"]},{"label":["idcs_d15_r3_S30"],"name":[25],"type":["int"],"align":["right"]},{"label":["idcs_d15_r3_S32"],"name":[26],"type":["int"],"align":["right"]},{"label":["cDC1_spleen_1_S33"],"name":[27],"type":["int"],"align":["right"]},{"label":["cDC1_spleen_3_S35"],"name":[28],"type":["int"],"align":["right"]},{"label":["cDC1_spleen_3_S37"],"name":[29],"type":["int"],"align":["right"]},{"label":["cDC1_spleen_4_S38"],"name":[30],"type":["int"],"align":["right"]},{"label":["cDC2_spleen_3_S39"],"name":[31],"type":["int"],"align":["right"]},{"label":["cDC2_spleen_3_S42"],"name":[32],"type":["int"],"align":["right"]},{"label":["cDC2_spleen_4_S43"],"name":[33],"type":["int"],"align":["right"]},{"label":["cDC2_spleen_4_S44"],"name":[34],"type":["int"],"align":["right"]},{"label":["pDCs_spleen_1_S47"],"name":[35],"type":["int"],"align":["right"]},{"label":["pDCs_spleen_2_S45"],"name":[36],"type":["int"],"align":["right"]},{"label":["pDCs_spleen_2_S48"],"name":[37],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"0","3":"0","4":"1","5":"0","6":"2","7":"3","8":"1","9":"0","10":"0","11":"0","12":"0","13":"0","14":"0","15":"1","16":"0","17":"1","18":"0","19":"1","20":"0","21":"0","22":"0","23":"0","24":"1","25":"0","26":"0","27":"0","28":"2","29":"0","30":"0","31":"0","32":"0","33":"0","34":"1","35":"0","36":"0","37":"1","_rn_":"100009600"},{"1":"0","2":"0","3":"0","4":"1","5":"0","6":"0","7":"0","8":"1","9":"0","10":"0","11":"0","12":"0","13":"0","14":"0","15":"0","16":"0","17":"0","18":"0","19":"0","20":"0","21":"0","22":"0","23":"3","24":"0","25":"0","26":"1","27":"0","28":"0","29":"0","30":"0","31":"0","32":"0","33":"0","34":"0","35":"3","36":"9","37":"4","_rn_":"100009609"},{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"0","7":"0","8":"0","9":"0","10":"0","11":"0","12":"0","13":"0","14":"0","15":"0","16":"0","17":"0","18":"0","19":"0","20":"0","21":"0","22":"0","23":"0","24":"0","25":"0","26":"0","27":"0","28":"0","29":"0","30":"0","31":"0","32":"0","33":"0","34":"0","35":"0","36":"0","37":"0","_rn_":"100009614"},{"1":"8","2":"2","3":"2","4":"9","5":"2","6":"15","7":"8","8":"16","9":"11","10":"23","11":"15","12":"24","13":"16","14":"13","15":"8","16":"9","17":"1","18":"5","19":"12","20":"13","21":"4","22":"10","23":"5","24":"5","25":"1","26":"16","27":"6","28":"31","29":"16","30":"21","31":"14","32":"24","33":"40","34":"28","35":"36","36":"24","37":"42","_rn_":"100009664"},{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"0","7":"0","8":"0","9":"0","10":"0","11":"2","12":"0","13":"0","14":"0","15":"0","16":"0","17":"0","18":"0","19":"0","20":"0","21":"0","22":"0","23":"0","24":"0","25":"0","26":"0","27":"0","28":"0","29":"0","30":"0","31":"0","32":"0","33":"0","34":"0","35":"1","36":"0","37":"0","_rn_":"100012"},{"1":"157","2":"59","3":"48","4":"123","5":"151","6":"146","7":"100","8":"174","9":"186","10":"129","11":"106","12":"232","13":"74","14":"168","15":"78","16":"65","17":"80","18":"69","19":"130","20":"198","21":"38","22":"153","23":"58","24":"94","25":"66","26":"80","27":"19","28":"43","29":"29","30":"25","31":"53","32":"44","33":"96","34":"46","35":"12","36":"16","37":"21","_rn_":"100017"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="filtering-lowly-expressed-genes" class="section level1">
+<h1>Filtering lowly expressed genes:</h1>
+<div id="filter-vol-1" class="section level2">
+<h2>Filter vol 1:</h2>
+<p>Using genefilter package we filter out genes with row variance less or equal the 1</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">rv &lt;-<span class="st"> </span><span class="kw">rowVars</span>(<span class="kw">as.matrix</span>(counts))
+counts &lt;-<span class="st"> </span>counts[rv <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>,]
+<span class="kw">nrow</span>(counts)</code></pre></div>
+<pre><code>## [1] 19370</code></pre>
+</div>
+<div id="filter-vol-2" class="section level2">
+<h2>Filter vol 2:</h2>
+<p>Filter out genes expressed in ….</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subset.test1 &lt;-<span class="st"> </span><span class="kw">c</span>()
+<span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">dim</span>(counts)[<span class="dv">1</span>]){
+  x &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(counts[j,])
+  list.cell &lt;-<span class="st"> </span><span class="kw">unique</span>(<span class="kw">as.character</span>(sampleCondition))
+  list.all &lt;-<span class="st"> </span><span class="kw">c</span>()
+  <span class="cf">for</span> (i <span class="cf">in</span> list.cell){
+    list.all &lt;-<span class="st"> </span><span class="kw">c</span>(list.all, <span class="kw">sum</span>(x[<span class="kw">which</span>(sampleCondition <span class="op">%in%</span><span class="st"> </span>i)]<span class="op">!=</span><span class="dv">0</span>))
+  }
+  <span class="cf">if</span> (<span class="kw">sum</span>(list.all <span class="op">&gt;=</span><span class="st"> </span><span class="dv">2</span>) <span class="op">&gt;=</span><span class="st"> </span><span class="dv">7</span>) {
+    subset.test1 &lt;-<span class="st"> </span><span class="kw">c</span>(subset.test1, <span class="ot">TRUE</span>)
+  }
+  <span class="cf">else</span>{
+    subset.test1 &lt;-<span class="st"> </span><span class="kw">c</span>(subset.test1, <span class="ot">FALSE</span>)}
+}
+
+counts =<span class="st"> </span>counts[subset.test1,]
+<span class="kw">nrow</span>(counts)</code></pre></div>
+<pre><code>## [1] 14946</code></pre>
+</div>
+</div>
+<div id="edger" class="section level1">
+<h1>EdgeR</h1>
+<p>Using EdgeR package to find differently expressed gene</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cds &lt;-<span class="st"> </span><span class="kw">DGEList</span>(<span class="dt">counts=</span>counts,<span class="dt">group=</span>sampleCondition)
+cds &lt;-<span class="kw">calcNormFactors</span>(cds)
+cds &lt;-<span class="st"> </span><span class="kw">estimateDisp</span>(cds)</code></pre></div>
+<pre><code>## Design matrix not provided. Switch to the classic mode.</code></pre>
+<div id="pairwise-comparsion" class="section level2 tabset">
+<h2>Pairwise comparsion</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">exact_test &lt;-<span class="st"> </span><span class="cf">function</span>(x,y, pvalue, logFC) {
+  test_control &lt;-<span class="st"> </span><span class="kw">exactTest</span>(cds, <span class="dt">pair=</span><span class="kw">c</span>(x,y))
+  de_test_control &lt;-<span class="st"> </span>test_control<span class="op">$</span>table
+  de_test_control<span class="op">$</span>p.adjust &lt;-<span class="st"> </span><span class="kw">p.adjust</span>(de_test_control<span class="op">$</span>PValue, <span class="st">&quot;BH&quot;</span>) 
+  de_test_control&lt;-<span class="st"> </span>de_test_control[de_test_control<span class="op">$</span>p.adjust <span class="op">&lt;</span><span class="st"> </span>pvalue,]
+  de_test_control &lt;-<span class="st"> </span>de_test_control[<span class="kw">abs</span>(de_test_control<span class="op">$</span>logFC) <span class="op">&gt;</span><span class="st"> </span>logFC,]
+}</code></pre></div>
+<div id="day-5-vs-mefs" class="section level3">
+<h3>Day 5 vs Mefs</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded5_mef &lt;-<span class="st"> </span><span class="kw">exact_test</span>(<span class="st">&quot;mef&quot;</span>, <span class="st">&quot;day_5&quot;</span>, <span class="fl">0.05</span>, <span class="fl">0.5</span>)
+<span class="kw">head</span>(ded5_mef)</code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["logFC"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["logCPM"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["PValue"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["p.adjust"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"-0.5255878","2":"4.9640254","3":"9.159398e-04","4":"2.558332e-03","_rn_":"100017"},{"1":"10.3458192","2":"4.5856348","3":"7.235515e-67","4":"6.109718e-65","_rn_":"100033459"},{"1":"6.3190222","2":"5.3857911","3":"1.793382e-36","4":"6.009840e-35","_rn_":"100034251"},{"1":"1.4054542","2":"0.9440132","3":"1.964317e-02","4":"4.077596e-02","_rn_":"100036569"},{"1":"1.7069933","2":"5.1316366","3":"5.382693e-09","4":"3.152419e-08","_rn_":"100037283"},{"1":"-3.1538595","2":"1.9669841","3":"5.084166e-25","4":"9.855765e-24","_rn_":"100038347"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="day-9-vs-day-5" class="section level3">
+<h3>Day 9 vs day 5</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded9_d5 &lt;-<span class="st"> </span><span class="kw">exact_test</span>(<span class="st">&quot;day_5&quot;</span>, <span class="st">&quot;day_9&quot;</span>, <span class="fl">0.05</span>, <span class="fl">0.5</span>)
+<span class="kw">head</span>(ded9_d5)</code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["logFC"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["logCPM"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["PValue"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["p.adjust"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"1.1338551","2":"5.131637","3":"6.218379e-05","4":"4.224540e-03","_rn_":"100037283"},{"1":"-4.0324052","2":"3.266535","3":"8.417866e-05","4":"5.422993e-03","_rn_":"100043143"},{"1":"1.4093559","2":"2.228534","3":"4.891175e-04","4":"2.118942e-02","_rn_":"100503433"},{"1":"1.1769795","2":"6.676324","3":"4.796716e-08","4":"1.120183e-05","_rn_":"100637"},{"1":"-0.9780625","2":"4.552221","3":"6.675949e-05","4":"4.494537e-03","_rn_":"100702"},{"1":"2.0033966","2":"4.931468","3":"1.901926e-08","4":"4.987050e-06","_rn_":"101202"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="day-15-vs-day-9" class="section level3">
+<h3>Day 15 vs day 9</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded15_d9 &lt;-<span class="st"> </span><span class="kw">exact_test</span>(<span class="st">&quot;day_9&quot;</span>, <span class="st">&quot;day_15&quot;</span>, <span class="fl">0.05</span>, <span class="fl">0.5</span>)
+<span class="kw">head</span>(ded15_d9)</code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["logFC"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["logCPM"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["PValue"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["p.adjust"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"-0.9709121","2":"4.585635","3":"5.445801e-04","4":"0.0369865821","_rn_":"100033459"},{"1":"-1.1608201","2":"5.131637","3":"5.797194e-05","4":"0.0090255059","_rn_":"100037283"},{"1":"2.4615720","2":"2.781104","3":"6.971649e-05","4":"0.0102155164","_rn_":"100039239"},{"1":"4.1626873","2":"3.266535","3":"3.242848e-05","4":"0.0063773168","_rn_":"100043143"},{"1":"1.8624073","2":"3.960179","3":"9.699181e-07","4":"0.0004676257","_rn_":"100503338"},{"1":"1.3650906","2":"3.530026","3":"6.658075e-04","4":"0.0416381566","_rn_":"101835"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="day-9-vs-cdc1" class="section level3">
+<h3>Day 9 vs cDC1</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded9_cDC1 &lt;-<span class="st"> </span><span class="kw">exact_test</span>(<span class="st">&quot;cDC1&quot;</span>, <span class="st">&quot;day_9&quot;</span>, <span class="fl">0.05</span>, <span class="fl">0.5</span>)
+<span class="kw">head</span>(ded9_cDC1)</code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["logFC"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["logCPM"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["PValue"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["p.adjust"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"-1.681675","2":"2.562497","3":"1.112674e-03","4":"2.711564e-03","_rn_":"100009664"},{"1":"1.436773","2":"4.964025","3":"5.733690e-11","4":"3.204777e-10","_rn_":"100017"},{"1":"-2.318409","2":"4.018640","3":"1.947801e-10","4":"1.034168e-09","_rn_":"100019"},{"1":"3.347928","2":"4.585635","3":"4.782445e-23","4":"5.553879e-22","_rn_":"100033459"},{"1":"1.652755","2":"5.385791","3":"7.815062e-06","4":"2.602583e-05","_rn_":"100034251"},{"1":"-1.345288","2":"5.026611","3":"3.686938e-10","4":"1.916695e-09","_rn_":"100036521"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div id="heatmap-of-de-genes" class="section level2 tabset">
+<h2>Heatmap of DE genes:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cpm_counts_sig_mef_idc_upDown &lt;-<span class="st"> </span><span class="kw">cpm</span>(cds)
+counts_scaled_sig_mef_id_upDown &lt;-<span class="kw">t</span>(<span class="kw">scale</span>(<span class="kw">t</span>(cpm_counts_sig_mef_idc_upDown)))
+
+MinMax &lt;-<span class="st"> </span><span class="cf">function</span>(data, min, max){
+  data2 &lt;-<span class="st"> </span>data
+  data2[data2 <span class="op">&lt;</span><span class="st"> </span>min] =<span class="st"> </span>min
+  data2[data2 <span class="op">&gt;</span><span class="st"> </span>max] =<span class="st"> </span>max
+  <span class="kw">return</span>(data2)
+}
+
+counts_scaled_sig_mef_id_upDown =<span class="st"> </span><span class="kw">MinMax</span>(counts_scaled_sig_mef_id_upDown, <span class="op">-</span><span class="fl">2.5</span>, <span class="fl">2.5</span>)
+mycol &lt;-<span class="st"> </span><span class="kw">colorpanel</span>(<span class="dv">100</span>, <span class="st">&quot;purple&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;yellow&quot;</span>)
+plot_heatmaps &lt;-<span class="st"> </span><span class="cf">function</span>(x, x_dataFrame) {
+  plot &lt;-<span class="st"> </span><span class="kw">pheatmap</span>(<span class="kw">as.matrix</span>(counts_scaled_sig_mef_id_upDown[<span class="kw">rownames</span>(x),<span class="kw">rownames</span>(x_dataFrame)]),
+                                      <span class="dt">col=</span>mycol, <span class="dt">show_colnames =</span> F, <span class="dt">annotation_col=</span>x_dataFrame,
+                                      <span class="dt">labels_col =</span> x_dataFrame[,<span class="dv">1</span>], <span class="dt">cutree_rows =</span> <span class="dv">2</span>, <span class="dt">annotation_names_row =</span> F,
+                                      <span class="dt">show_rownames =</span> F, <span class="dt">cluster_cols =</span> F,
+                                      <span class="dt">clustering_distance_rows =</span> <span class="st">&quot;correlation&quot;</span>,
+                                      <span class="dt">clustering_method =</span> <span class="st">&quot;ward.D2&quot;</span>, <span class="dt">annotation_names_col=</span>F)
+  <span class="kw">return</span>(plot)
+}</code></pre></div>
+<div id="day-5-vs-mefs-1" class="section level3">
+<h3>Day 5 vs Mefs</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded5_mef_dataframe &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">as.character</span>(sampleCondition[<span class="dv">1</span><span class="op">:</span><span class="dv">9</span>]), <span class="dt">row.names =</span> <span class="kw">colnames</span>(cpm_counts_sig_mef_idc_upDown[,<span class="dv">1</span><span class="op">:</span><span class="dv">9</span>]))
+<span class="kw">colnames</span>(ded5_mef_dataframe) &lt;-<span class="st"> &quot;Cell_type&quot;</span>
+<span class="kw">plot_heatmaps</span>(ded5_mef, ded5_mef_dataframe)</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-day-5-1" class="section level3">
+<h3>Day 9 vs day 5</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ded9_d5_dataframe &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">as.character</span>(sampleCondition[<span class="kw">c</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">9</span>, <span class="dv">16</span><span class="op">:</span><span class="dv">18</span>)]), <span class="dt">row.names =</span> <span class="kw">colnames</span>(cpm_counts_sig_mef_idc_upDown[,<span class="kw">c</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">9</span>, <span class="dv">16</span><span class="op">:</span><span class="dv">18</span>)]))
+<span class="kw">colnames</span>(ded9_d5_dataframe) &lt;-<span class="st"> &quot;Cell_type&quot;</span>
+<span class="kw">plot_heatmaps</span>(ded9_d5, ded9_d5_dataframe)</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="day-15-vs-day-9-1" class="section level3">
+<h3>Day 15 vs day 9</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d15_d9_dataframe &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">as.character</span>(sampleCondition[<span class="kw">c</span>(<span class="dv">16</span><span class="op">:</span><span class="dv">18</span>, <span class="dv">23</span><span class="op">:</span><span class="dv">26</span>)]), <span class="dt">row.names =</span> <span class="kw">colnames</span>(cpm_counts_sig_mef_idc_upDown[,<span class="kw">c</span>(<span class="dv">16</span><span class="op">:</span><span class="dv">18</span>, <span class="dv">23</span><span class="op">:</span><span class="dv">26</span>)]))
+<span class="kw">colnames</span>(d15_d9_dataframe) &lt;-<span class="st"> &quot;Cell_type&quot;</span>
+<span class="kw">plot_heatmaps</span>(ded15_d9, d15_d9_dataframe)</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-cdc1-1" class="section level3">
+<h3>Day 9 vs cDC1</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d9_cDC1_dataframe &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">as.character</span>(sampleCondition[<span class="kw">c</span>(<span class="dv">16</span><span class="op">:</span><span class="dv">18</span>,<span class="dv">27</span><span class="op">:</span><span class="dv">30</span>)]), <span class="dt">row.names =</span> <span class="kw">colnames</span>(cpm_counts_sig_mef_idc_upDown[,<span class="kw">c</span>(<span class="dv">16</span><span class="op">:</span><span class="dv">18</span>,<span class="dv">27</span><span class="op">:</span><span class="dv">30</span>)]))
+<span class="kw">colnames</span>(d9_cDC1_dataframe) &lt;-<span class="st"> &quot;Cell_type&quot;</span>
+<span class="kw">plot_heatmaps</span>(ded9_cDC1, d9_cDC1_dataframe)</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="pathway-analysis" class="section level1">
+<h1>Pathway analysis</h1>
+<div id="define-cluster" class="section level2 tabset">
+<h2>Define cluster</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">define_cluster &lt;-<span class="st"> </span><span class="cf">function</span>(x, logFC, name) {
+  cluster &lt;-<span class="st"> </span><span class="kw">list</span>()
+  cluster<span class="op">$</span>Patways_up &lt;-<span class="st"> </span><span class="kw">rownames</span>(x[x<span class="op">$</span>logFC <span class="op">&gt;</span><span class="st"> </span>logFC, ])
+  cluster<span class="op">$</span>Patways_down&lt;-<span class="st">  </span><span class="kw">rownames</span>(x[x<span class="op">$</span>logFC <span class="op">&lt;</span><span class="st"> </span><span class="op">-</span>logFC, ])
+  <span class="co">#write.table(rownames(x[abs(x$logFC) &gt; logFC,]), file=paste0(&quot;gene_lists_results/&quot;, name ,&quot;_&quot;, logFC, &quot;.txt&quot;), sep=&quot;\t&quot;, quote = F, row.names = F, col.names=F)</span>
+  <span class="kw">return</span>(cluster)
+}</code></pre></div>
+<div id="day-5-vs-mefs-2" class="section level3 tabset">
+<h3>Day 5 vs Mefs</h3>
+<div id="numer-of-genes-up-in-day-5-compared-to-mef" class="section level4">
+<h4>Numer of genes up in day 5 compared to Mef</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d5_mef_cluster &lt;-<span class="st"> </span><span class="kw">define_cluster</span>(ded5_mef, <span class="fl">0.5</span>, <span class="dt">name=</span><span class="st">&quot;d9_d5&quot;</span>)
+<span class="kw">length</span>(d5_mef_cluster<span class="op">$</span>Patways_up) </code></pre></div>
+<pre><code>## [1] 3621</code></pre>
+</div>
+<div id="numer-of-genes-down-in-day-5-compared-to-mef" class="section level4">
+<h4>Numer of genes down in day 5 compared to Mef</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(d5_mef_cluster<span class="op">$</span>Patways_down)</code></pre></div>
+<pre><code>## [1] 3186</code></pre>
+</div>
+</div>
+<div id="day-9-vs-day-5-2" class="section level3 tabset">
+<h3>Day 9 vs day 5</h3>
+<div id="numer-of-genes-up-in-day-9-compared-to-day-5" class="section level4">
+<h4>Numer of genes up in day 9 compared to day 5</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d9_d5_cluster &lt;-<span class="st"> </span><span class="kw">define_cluster</span>(ded9_d5, <span class="fl">0.5</span>, <span class="dt">name=</span><span class="st">&quot;d9_d5&quot;</span>)
+<span class="kw">length</span>(d9_d5_cluster<span class="op">$</span>Patways_up) </code></pre></div>
+<pre><code>## [1] 295</code></pre>
+</div>
+<div id="numer-of-genes-down-in-day-9-compared-to-day-5" class="section level4">
+<h4>Numer of genes down in day 9 compared to day 5</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(d9_d5_cluster<span class="op">$</span>Patways_down)</code></pre></div>
+<pre><code>## [1] 204</code></pre>
+</div>
+</div>
+<div id="day-15-vs-day-9-2" class="section level3 tabset">
+<h3>Day 15 vs day 9</h3>
+<div id="numer-of-genes-up-in-day-15-compared-to-day-9" class="section level4">
+<h4>Numer of genes up in day 15 compared to day 9</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d15_d9_cluster &lt;-<span class="st"> </span><span class="kw">define_cluster</span>(ded15_d9, <span class="fl">0.5</span>, <span class="dt">name=</span><span class="st">&quot;d9_d5&quot;</span>)
+<span class="kw">length</span>(d15_d9_cluster<span class="op">$</span>Patways_up) </code></pre></div>
+<pre><code>## [1] 127</code></pre>
+</div>
+<div id="numer-of-genes-down-in-day-15-compared-to-day-9" class="section level4">
+<h4>Numer of genes down in day 15 compared to day 9</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(d15_d9_cluster<span class="op">$</span>Patways_down)</code></pre></div>
+<pre><code>## [1] 140</code></pre>
+</div>
+</div>
+<div id="day-9-vs-cdc1-2" class="section level3 tabset">
+<h3>Day 9 vs cDC1</h3>
+<div id="numer-of-genes-up-in-day-9-compared-to-cdc1" class="section level4">
+<h4>Numer of genes up in day 9 compared to cDC1</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d9_cDC1_cluster &lt;-<span class="st"> </span><span class="kw">define_cluster</span>(ded9_cDC1, <span class="fl">0.5</span>, <span class="dt">name=</span><span class="st">&quot;d9_d5&quot;</span>)
+<span class="kw">length</span>(d9_cDC1_cluster<span class="op">$</span>Patways_up) </code></pre></div>
+<pre><code>## [1] 4150</code></pre>
+</div>
+<div id="numer-of-genes-down-in-day-9-compared-to-cdc1" class="section level4">
+<h4>Numer of genes down in day 9 compared to cDC1</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(d9_cDC1_cluster<span class="op">$</span>Patways_down)</code></pre></div>
+<pre><code>## [1] 3742</code></pre>
+</div>
+</div>
+</div>
+<div id="go-pathway-analysis-using-clusterprofiler" class="section level2 tabset">
+<h2>GO Pathway analysis Using clusterProfiler:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pathway_analysis &lt;-<span class="st"> </span><span class="cf">function</span>(x, ont, name) {
+  results &lt;-<span class="st"> </span><span class="kw">compareCluster</span>(<span class="dt">geneClusters =</span> x, <span class="dt">fun=</span><span class="st">&quot;enrichGO&quot;</span>, <span class="dt">OrgDb=</span><span class="st">&quot;org.Mm.eg.db&quot;</span>, <span class="dt">ont=</span>ont, <span class="dt">qvalueCutoff=</span><span class="fl">0.05</span>)
+  <span class="kw">saveRDS</span>(results, <span class="dt">file=</span><span class="kw">paste0</span>(<span class="st">&quot;compareClusters/&quot;</span>, name, <span class="st">&quot;_&quot;</span>, ont, <span class="st">&quot;.Rdata&quot;</span>))
+  <span class="kw">return</span>(results)
+}</code></pre></div>
+<div id="cellular-component" class="section level3 tabset">
+<h3>Cellular component</h3>
+<div id="day-5-vs-mefs-3" class="section level4">
+<h4>Day 5 vs Mefs</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d5_mef_CC &lt;- pathway_analysis(d5_mef_cluster, &quot;CC&quot;, name=&quot;d5_mef&quot;)</span>
+d5_mef_CC &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d5_mef_CC.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d5_mef_CC, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-day-5-3" class="section level4">
+<h4>Day 9 vs day 5</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_d5_CC &lt;- pathway_analysis(d9_d5_cluster, &quot;CC&quot;, name=&quot;d9_d5&quot;)</span>
+d9_d5_CC &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_d5_CC.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d9_d5_CC, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
+</div>
+<div id="day-15-vs-day-9-3" class="section level4">
+<h4>Day 15 vs day 9</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d15_d9_CC &lt;- pathway_analysis(d15_d9_cluster, &quot;CC&quot;, name=&quot;d15_d9&quot;)</span>
+d15_d9_CC &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d15_d9_CC.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d15_d9_CC, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-cdc1-3" class="section level4">
+<h4>Day 9 vs cDC1</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_cDC1_CC &lt;- pathway_analysis(d9_cDC1_cluster, &quot;CC&quot;, name=&quot;d9_cDC1&quot;)</span>
+d9_cDC1_CC &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_cDC1_CC.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d9_cDC1_CC, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+</div>
+</div>
+<div id="biological-process" class="section level3 tabset">
+<h3>Biological process</h3>
+<div id="day-5-vs-mefs-4" class="section level4">
+<h4>Day 5 vs Mefs</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d5_mef_BP &lt;- pathway_analysis(d5_mef_cluster, &quot;BP&quot;, name=&quot;d5_mef&quot;)</span>
+d5_mef_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d5_mef_BP.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d5_mef_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-day-5-4" class="section level4">
+<h4>Day 9 vs day 5</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_d5_BP &lt;- pathway_analysis(d9_d5_cluster, &quot;BP&quot;, name=&quot;d9_d5&quot;)</span>
+d9_d5_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_d5_BP.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d9_d5_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+</div>
+<div id="day-15-vs-day-9-4" class="section level4">
+<h4>Day 15 vs day 9</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d15_d9_BP &lt;- pathway_analysis(d15_d9_cluster, &quot;BP&quot;, name=&quot;d15_d9&quot;)</span>
+d15_d9_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d15_d9_BP.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d15_d9_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-cdc1-4" class="section level4">
+<h4>Day 9 vs cDC1</h4>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_cDC1_BP &lt;- pathway_analysis(d9_cDC1_cluster, &quot;BP&quot;, name=&quot;d9_cDC1&quot;)</span>
+d9_cDC1_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_cDC1_BP.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d9_cDC1_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="kegg-pathway-analysis-using-clusterprofiler" class="section level2 tabset">
+<h2>KEGG Pathway analysis Using clusterProfiler:</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">KEGG_pathway_analysis &lt;-<span class="st"> </span><span class="cf">function</span>(x, name) {
+  results &lt;-<span class="st"> </span><span class="kw">compareCluster</span>(<span class="dt">geneClusters =</span> x, <span class="dt">fun=</span><span class="st">&quot;enrichKEGG&quot;</span>, <span class="dt">organism=</span><span class="st">&quot;mmu&quot;</span>, <span class="dt">keyType=</span><span class="st">&quot;kegg&quot;</span>, <span class="dt">qvalueCutoff=</span><span class="fl">0.05</span>)
+  <span class="kw">saveRDS</span>(results, <span class="dt">file=</span><span class="kw">paste0</span>(<span class="st">&quot;compareClusters/&quot;</span>, name, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;KEGG.Rdata&quot;</span>))
+  <span class="kw">return</span>(results)
+}</code></pre></div>
+<div id="day-5-vs-mefs-5" class="section level3">
+<h3>Day 5 vs Mefs</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d5_mef_KEGG &lt;- KEGG_pathway_analysis(d5_mef_cluster, name=&quot;d5_mef&quot;)</span>
+d5_mef_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d5_mef_KEGG.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d5_mef_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
+</div>
+<div id="day-9-vs-day-5-5" class="section level3">
+<h3>Day 9 vs day 5</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_d5_KEGG &lt;- KEGG_pathway_analysis(d9_d5_cluster, name=&quot;d9_d5&quot;)</span>
+d9_d5_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_d5_KEGG.Rdata&quot;</span>)
+<span class="kw">dotplot</span>(d9_d5_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
+</div>
+<div id="day-15-vs-day-9-5" class="section level3">
+<h3>Day 15 vs day 9</h3>
+<p>No enrichemnt found</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># d15_d9_KEGG &lt;- KEGG_pathway_analysis(d15_d9_cluster, name=&quot;d15_d9&quot;)</span>
+<span class="co"># dotplot(d15_d9_KEGG, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))</span></code></pre></div>
+</div>
+<div id="day-9-vs-cdc1-5" class="section level3">
+<h3>Day 9 vs cDC1</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d9_cDC1_KEGG &lt;-<span class="st"> </span><span class="kw">KEGG_pathway_analysis</span>(d9_cDC1_cluster, <span class="dt">name=</span><span class="st">&quot;d9_cDC1&quot;</span>)
+<span class="kw">dotplot</span>(d9_cDC1_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
