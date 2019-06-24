@@ -381,8 +381,8 @@ div.tocify {
 <span class="kw">library</span>(org.Mm.eg.db)
 <span class="kw">library</span>(gplots)
 <span class="kw">library</span>(ggplot2)</code></pre></div>
-<div id="read-in-the-data-and-remove-sampels-that-were-irregular-according-to-correlation" class="section level2">
-<h2>Read in the data and remove sampels that were irregular according to correlation:</h2>
+<div id="read-in-the-data-and-remove-sampels-that-were-irregular-according-to-correlation" class="section level1">
+<h1>1 Read in the data and remove sampels that were irregular according to correlation:</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">counts &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="st">&quot;~/Documents/Lund/Vor2018_Haust2014/Data/count_results_3/entrenzID.final.matrix.txt&quot;</span>, <span class="dt">row.names =</span> <span class="dv">1</span>)
 counts &lt;-<span class="st"> </span>counts[<span class="kw">c</span>(<span class="dv">38</span><span class="op">:</span><span class="dv">44</span>,<span class="dv">21</span><span class="op">:</span><span class="dv">37</span>,<span class="dv">13</span><span class="op">:</span><span class="dv">20</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">12</span>,<span class="dv">45</span><span class="op">:</span><span class="dv">48</span>)]
 counts &lt;-<span class="st"> </span>counts[<span class="op">-</span><span class="kw">c</span>(<span class="dv">4</span>, <span class="dv">6</span>,<span class="dv">10</span>,<span class="dv">14</span>,<span class="dv">18</span>,<span class="dv">22</span>,<span class="dv">34</span>,<span class="dv">37</span>,<span class="dv">39</span><span class="op">:</span><span class="dv">40</span>,<span class="dv">45</span>)]
@@ -398,9 +398,9 @@ sampleCondition &lt;-<span class="st"> </span><span class="kw">c</span>(<span cl
 </div>
 </div>
 <div id="filtering-lowly-expressed-genes" class="section level1">
-<h1>Filtering lowly expressed genes:</h1>
+<h1>2 Filtering lowly expressed genes:</h1>
 <div id="filter-vol-1" class="section level2">
-<h2>Filter vol 1:</h2>
+<h2>2.1 Filter vol 1:</h2>
 <p>Using genefilter package we filter out genes with row variance less or equal the 1</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">rv &lt;-<span class="st"> </span><span class="kw">rowVars</span>(<span class="kw">as.matrix</span>(counts))
 counts &lt;-<span class="st"> </span>counts[rv <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>,]
@@ -408,7 +408,7 @@ counts &lt;-<span class="st"> </span>counts[rv <span class="op">&gt;=</span><spa
 <pre><code>## [1] 19370</code></pre>
 </div>
 <div id="filter-vol-2" class="section level2">
-<h2>Filter vol 2:</h2>
+<h2>2.2 Filter vol 2:</h2>
 <p>Filter out genes expressed in ….</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">subset.test1 &lt;-<span class="st"> </span><span class="kw">c</span>()
 <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">dim</span>(counts)[<span class="dv">1</span>]){
@@ -431,14 +431,14 @@ counts =<span class="st"> </span>counts[subset.test1,]
 </div>
 </div>
 <div id="edger" class="section level1">
-<h1>EdgeR</h1>
+<h1>3 EdgeR</h1>
 <p>Using EdgeR package to find differently expressed gene</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cds &lt;-<span class="st"> </span><span class="kw">DGEList</span>(<span class="dt">counts=</span>counts,<span class="dt">group=</span>sampleCondition)
 cds &lt;-<span class="kw">calcNormFactors</span>(cds)
 cds &lt;-<span class="st"> </span><span class="kw">estimateDisp</span>(cds)</code></pre></div>
 <pre><code>## Design matrix not provided. Switch to the classic mode.</code></pre>
 <div id="pairwise-comparsion" class="section level2 tabset">
-<h2>Pairwise comparsion</h2>
+<h2>3.1 Pairwise comparsion</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">exact_test &lt;-<span class="st"> </span><span class="cf">function</span>(x,y, pvalue, logFC) {
   test_control &lt;-<span class="st"> </span><span class="kw">exactTest</span>(cds, <span class="dt">pair=</span><span class="kw">c</span>(x,y))
   de_test_control &lt;-<span class="st"> </span>test_control<span class="op">$</span>table
@@ -488,7 +488,7 @@ cds &lt;-<span class="st"> </span><span class="kw">estimateDisp</span>(cds)</cod
 </div>
 </div>
 <div id="heatmap-of-de-genes" class="section level2 tabset">
-<h2>Heatmap of DE genes:</h2>
+<h2>3.2 Heatmap of DE genes:</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cpm_counts_sig_mef_idc_upDown &lt;-<span class="st"> </span><span class="kw">cpm</span>(cds)
 counts_scaled_sig_mef_id_upDown &lt;-<span class="kw">t</span>(<span class="kw">scale</span>(<span class="kw">t</span>(cpm_counts_sig_mef_idc_upDown)))
 
@@ -541,9 +541,9 @@ plot_heatmaps &lt;-<span class="st"> </span><span class="cf">function</span>(x, 
 </div>
 </div>
 <div id="pathway-analysis" class="section level1">
-<h1>Pathway analysis</h1>
+<h1>4 Pathway analysis</h1>
 <div id="define-cluster" class="section level2 tabset">
-<h2>Define cluster</h2>
+<h2>4.1 Define cluster</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">define_cluster &lt;-<span class="st"> </span><span class="cf">function</span>(x, logFC, name) {
   cluster &lt;-<span class="st"> </span><span class="kw">list</span>()
   cluster<span class="op">$</span>Patways_up &lt;-<span class="st"> </span><span class="kw">rownames</span>(x[x<span class="op">$</span>logFC <span class="op">&gt;</span><span class="st"> </span>logFC, ])
@@ -609,7 +609,7 @@ plot_heatmaps &lt;-<span class="st"> </span><span class="cf">function</span>(x, 
 </div>
 </div>
 <div id="go-pathway-analysis-using-clusterprofiler" class="section level2 tabset">
-<h2>GO Pathway analysis Using clusterProfiler:</h2>
+<h2>4.2 GO Pathway analysis Using clusterProfiler:</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pathway_analysis &lt;-<span class="st"> </span><span class="cf">function</span>(x, ont, name) {
   results &lt;-<span class="st"> </span><span class="kw">compareCluster</span>(<span class="dt">geneClusters =</span> x, <span class="dt">fun=</span><span class="st">&quot;enrichGO&quot;</span>, <span class="dt">OrgDb=</span><span class="st">&quot;org.Mm.eg.db&quot;</span>, <span class="dt">ont=</span>ont, <span class="dt">qvalueCutoff=</span><span class="fl">0.05</span>)
   <span class="kw">saveRDS</span>(results, <span class="dt">file=</span><span class="kw">paste0</span>(<span class="st">&quot;compareClusters/&quot;</span>, name, <span class="st">&quot;_&quot;</span>, ont, <span class="st">&quot;.Rdata&quot;</span>))
@@ -660,26 +660,26 @@ d5_mef_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span cl
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_d5_BP &lt;- pathway_analysis(d9_d5_cluster, &quot;BP&quot;, name=&quot;d9_d5&quot;)</span>
 d9_d5_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_d5_BP.Rdata&quot;</span>)
 <span class="kw">dotplot</span>(d9_d5_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/fig1-1.png" width="960" /></p>
 </div>
 <div id="day-15-vs-day-9-4" class="section level4">
 <h4>Day 15 vs day 9</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d15_d9_BP &lt;- pathway_analysis(d15_d9_cluster, &quot;BP&quot;, name=&quot;d15_d9&quot;)</span>
 d15_d9_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d15_d9_BP.Rdata&quot;</span>)
 <span class="kw">dotplot</span>(d15_d9_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
 </div>
 <div id="day-9-vs-cdc1-4" class="section level4">
 <h4>Day 9 vs cDC1</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_cDC1_BP &lt;- pathway_analysis(d9_cDC1_cluster, &quot;BP&quot;, name=&quot;d9_cDC1&quot;)</span>
 d9_cDC1_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_cDC1_BP.Rdata&quot;</span>)
 <span class="kw">dotplot</span>(d9_cDC1_BP, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
 </div>
 </div>
 </div>
 <div id="kegg-pathway-analysis-using-clusterprofiler" class="section level2 tabset">
-<h2>KEGG Pathway analysis Using clusterProfiler:</h2>
+<h2>4.3 KEGG Pathway analysis Using clusterProfiler:</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">KEGG_pathway_analysis &lt;-<span class="st"> </span><span class="cf">function</span>(x, name) {
   results &lt;-<span class="st"> </span><span class="kw">compareCluster</span>(<span class="dt">geneClusters =</span> x, <span class="dt">fun=</span><span class="st">&quot;enrichKEGG&quot;</span>, <span class="dt">organism=</span><span class="st">&quot;mmu&quot;</span>, <span class="dt">keyType=</span><span class="st">&quot;kegg&quot;</span>, <span class="dt">qvalueCutoff=</span><span class="fl">0.05</span>)
   <span class="kw">saveRDS</span>(results, <span class="dt">file=</span><span class="kw">paste0</span>(<span class="st">&quot;compareClusters/&quot;</span>, name, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;KEGG.Rdata&quot;</span>))
@@ -690,14 +690,14 @@ d9_cDC1_BP &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span c
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d5_mef_KEGG &lt;- KEGG_pathway_analysis(d5_mef_cluster, name=&quot;d5_mef&quot;)</span>
 d5_mef_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d5_mef_KEGG.Rdata&quot;</span>)
 <span class="kw">dotplot</span>(d5_mef_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
 </div>
 <div id="day-9-vs-day-5-5" class="section level3">
 <h3>Day 9 vs day 5</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#d9_d5_KEGG &lt;- KEGG_pathway_analysis(d9_d5_cluster, name=&quot;d9_d5&quot;)</span>
 d9_d5_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;compareClusters/d9_d5_KEGG.Rdata&quot;</span>)
 <span class="kw">dotplot</span>(d9_d5_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
 </div>
 <div id="day-15-vs-day-9-5" class="section level3">
 <h3>Day 15 vs day 9</h3>
@@ -709,7 +709,7 @@ d9_d5_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span c
 <h3>Day 9 vs cDC1</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d9_cDC1_KEGG &lt;-<span class="st"> </span><span class="kw">KEGG_pathway_analysis</span>(d9_cDC1_cluster, <span class="dt">name=</span><span class="st">&quot;d9_cDC1&quot;</span>)
 <span class="kw">dotplot</span>(d9_cDC1_KEGG, <span class="dt">showCategory=</span><span class="dv">5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
-<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
+<p><img src="Bulk_pathway_analysis_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
 </div>
 </div>
 </div>
