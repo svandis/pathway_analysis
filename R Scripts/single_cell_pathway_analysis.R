@@ -3,6 +3,8 @@ library(dplyr)
 library(monocle)
 library(edgeR)
 library(clusterProfiler)
+library(pheatmap)
+library(gplots)
 setwd("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/")
 
 pbmc <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/filtered.idc.rds")
@@ -16,25 +18,27 @@ Idents(object = pbmc) <- pbmc$cell_type ## Run for supervised
 pbmc.markers <- FindAllMarkers(object = pbmc, only.pos = T, min.pct = 0.1, logfc.threshold = 0.3)
 table(pbmc.markers$cluster)
 
-pbmc.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
-top10 <- pbmc.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_logFC)
+pbmc.markers %>% 
+  group_by(cluster) %>% 
+  top_n(n = 2, wt = avg_logFC)
+top10 <- pbmc.markers %>% 
+  group_by(cluster) %>% 
+  top_n(n = 20, wt = avg_logFC)
 
 pdf("~/Documents/Lund/heatmap_logFC0.3_sup_vol2.pdf")
 DoHeatmap(object = pbmc, features = top10$gene, group.by = "cell_type") + NoLegend()
 dev.off()
 
 #### Filtering genes:
+#Connecting toghter name and cell type:
 number.list <- unlist(strsplit(colnames(pbmc@assays$RNA@counts),"-"))[seq(2,2*3693,2)]
-HSMM_sample_sheet_name <- data.frame(cell_name = number.list)
-rownames(HSMM_sample_sheet_name) <- colnames(pbmc@assays$RNA@counts)
-colnames(HSMM_sample_sheet_name) <- "cell_name"
-HSMM_sample_sheet <- as.data.frame(ifelse(number.list == 1, "HEF",
-                                          ifelse(number.list == 2, "idc_3",
-                                                 ifelse(number.list==3, "idc_9",
-                                                        ifelse(number.list==4, "cDC1",
-                                                               ifelse(number.list==5, "cDC2","pDC"))))))
-rownames(HSMM_sample_sheet) <- colnames(pbmc@assays$RNA@counts)
-colnames(HSMM_sample_sheet) <- "cell_type"
+HSMM_sample_sheet_name <- data.frame(cell_name = number.list, row.names = colnames(pbmc@assays$RNA@counts))
+HSMM_sample_sheet <- data.frame(cell_type = ifelse(number.list == 1, "HEF",
+                                                   ifelse(number.list == 2, "idc_3",
+                                                          ifelse(number.list==3, "idc_9",
+                                                                 ifelse(number.list==4, "cDC1",
+                                                                        ifelse(number.list==5, "cDC2","pDC"))))), row.names = colnames(pbmc@assays$RNA@counts))
+# Steps in Monocle
 pd <- new("AnnotatedDataFrame", data = HSMM_sample_sheet)
 HSMM_gene_annotation <- data.frame(gene_short_name = rownames(pbmc@assays$RNA@counts), row.names = rownames(pbmc@assays$RNA@counts))
 fd <- new("AnnotatedDataFrame", data = HSMM_gene_annotation)
@@ -44,21 +48,16 @@ pData(HSMM)$cell_name = HSMM_sample_sheet_name
 HSMM <- estimateSizeFactors(HSMM)
 HSMM <- estimateDispersions(HSMM)
 HSMM <- detectGenes(HSMM, min_expr = 0.1)
-print(head(fData(HSMM)))
 expressed_genes <- row.names(subset(fData(HSMM),
                                     num_cells_expressed >= 10))
 pData(HSMM)$Total_mRNAs <- Matrix::colSums(exprs(HSMM))
 HSMM <- HSMM[,pData(HSMM)$Total_mRNAs < 1e6] ## no cells above 1e6
 
+# Plot exp of indivitual genes
 gene_list_sel <- c("CTSS","CD68", "M6PR", "MCL1", "LAMP2", "LRRK2", "MYD88", "TICAM1", "TFEC", "STAT1")
-gene_list_sel <- c("TAOK1", "TAOK2", "TAOK3")
-gene_list_sel <- bitr(c("54751", "1969", "3339", "55616", "2275", "85440" ,"23032", "91624", "1266", "8394", "9181"),
-                      fromType = "ENTREZID", toType = "SYMBOL",
-                      OrgDb = "org.Hs.eg.db")[,2]
-
-gene_list_sel <- bitr(c("55920", "912", "911", "6233", "50489", "8673" ,"54918", "309", "3122", "3127"),
-                      fromType = "ENTREZID", toType = "SYMBOL",
-                      OrgDb = "org.Hs.eg.db")[,2]
+# gene_list_sel <- bitr(c("54751", "1969", "3339", "55616", "2275", "85440" ,"23032", "91624", "1266", "8394", "9181"),
+#                       fromType = "ENTREZID", toType = "SYMBOL",
+#                       OrgDb = "org.Hs.eg.db")[,2]
 
 for (i in 1:length(gene_list_sel)) {
   to_be_tested <- row.names(subset(fData(HSMM),
@@ -78,13 +77,13 @@ for (i in 1:length(gene_list_sel)) {
   dev.off()
   
 }
-
-monocle::plot_genes_violin(cds_subset,relative_expr=T,
-                           grouping = "cell_type",
-                           color_by = "cell_type",
-                           nrow=2,
-                           ncol= 3,
-                           plot_trend = TRUE, panel_order=gene_list_sel)+ scale_fill_manual(values = cbPalette)
+# Violin plot
+# monocle::plot_genes_violin(cds_subset,relative_expr=T,
+#                            grouping = "cell_type",
+#                            color_by = "cell_type",
+#                            nrow=2,
+#                            ncol= 3,
+#                            plot_trend = TRUE, panel_order=gene_list_sel)+ scale_fill_manual(values = cbPalette)
 
 #### Pre-work for edgeR
 counts <-  exprs(HSMM[expressed_genes,])
@@ -133,23 +132,19 @@ colnames(all.genes.edgeR) <- names.edgeR
 write.table(all.genes.edgeR, file= "edgeR_logFC_qval.txt", sep="\t", quote = F, row.names = F, col.names = T)
 
 ####################
-gene.sign.edgeR <- read.table("edgeR_logFC_qval.txt", header = T, row.names = 1)
+# No need to run edgeR again:
+gene.sign.edgeR <- read.table("edgeR_output/edgeR_logFC_qval.txt", header = T, row.names = 1)
 
-deHEF_idc3 <- gene.sign.edgeR[,c("qval.HEF.idc_3", "logFC.HEF.idc_3")]
-deHEF_idc3 <- deHEF_idc3[deHEF_idc3$qval.HEF.idc_3 < 0.05,]
-deHEF_idc3 <- deHEF_idc3[abs(deHEF_idc3$logFC.HEF.idc_3) > 0.5,]
+edgeR_results <- function(sample1, sample2, qval, logFC) {
+ results <-  gene.sign.edgeR[, c(sample1, sample2)]
+ results <- results[results[,sample1] < qval,]
+ results <- results[abs(results[,sample2]) > logFC,]
+}
 
-deHEF_idc9 <- gene.sign.edgeR[,c("qval.HEF.idc_9", "logFC.HEF.idc_9")]
-deHEF_idc9 <- deHEF_idc9[deHEF_idc9$qval.HEF.idc_9 < 0.05,]
-deHEF_idc9 <- deHEF_idc9[abs(deHEF_idc9$logFC.HEF.idc_9) > 0.5,]
-
-deidc3_idc9 <- gene.sign.edgeR[,c("qval.idc_3.idc_9", "logFC.idc_3.idc_9")]
-deidc3_idc9 <- deidc3_idc9[deidc3_idc9$qval.idc_3.idc_9 < 0.05,]
-deidc3_idc9 <- deidc3_idc9[abs(deidc3_idc9$logFC.idc_3.idc_9) > 0.5,]
-
-ded9_cDC1 <- gene.sign.edgeR[,c("qval.cDC1.idc_9", "logFC.cDC1.idc_9")]
-ded9_cDC1 <- ded9_cDC1[ded9_cDC1$qval.cDC1.idc_9 < 0.05,]
-ded9_cDC1 <- ded9_cDC1[abs(ded9_cDC1$logFC.cDC1.idc_9) > 0.5,]
+deHEF_idc3 <- edgeR_results("qval.HEF.idc_3", "logFC.HEF.idc_3", 0.05, 0.5)
+deHEF_idc9 <- edgeR_results("qval.HEF.idc_9", "logFC.HEF.idc_9", 0.05, 0.5)
+deidc3_idc9 <- edgeR_results("qval.idc_3.idc_9", "logFC.idc_3.idc_9", 0.05, 0.5)
+ded9_cDC1 <- edgeR_results("qval.cDC1.idc_9", "logFC.cDC1.idc_9", 0.05, 0.5) 
 
 
 ####### 
@@ -164,239 +159,169 @@ MinMax <- function(data, min, max){
 }
 
 counts_scaled_sig_hef_id_upDown2 = MinMax(counts_scaled_sig_hef_id_upDown, -2.5, 2.5)
-rm(counts_scaled_sig_hef_id_upDown)
 mycol <- colorpanel(100, "purple", "black", "yellow")
 
-logFC <- c(0.5)
-#####
+##### Heatmap
+make_matrix <- function(x, sample1, sample2) {
+  return_matrix <- as.matrix(counts_scaled_sig_hef_id_upDown2[rownames(x),
+                                                              c(which(colnames(counts_scaled_sig_hef_id_upDown2) == sample1),
+                                                                which(colnames(counts_scaled_sig_hef_id_upDown2) == sample2))])
+  colnames(return_matrix) <- rownames(pData(HSMM))[c(which(HSMM$cell_type==sample1), which(HSMM$cell_type==sample2))]
+  return(return_matrix)
+}
 
+make_datafram <- function(sample1, sample2) {
+  d3_hef_colname_dataframe <- data.frame(Cell_type = HSMM$cell_type[c(which(HSMM$cell_type == sample1), which(HSMM$cell_type == sample2))], row.names = rownames(pData(HSMM))[c(which(HSMM$cell_type==sample1), which(HSMM$cell_type== sample2))])
+}
 
-deHEF_idc3_logFC <- deHEF_idc3[abs(deHEF_idc3$logFC.HEF.idc_3) > logFC,]
-d3_hefmatrix <- as.matrix(counts_scaled_sig_hef_id_upDown2[rownames(deHEF_idc3_logFC),
-                                                           c(which(colnames(counts_scaled_sig_hef_id_upDown2) == "idc_3"),
-                                                             which(colnames(counts_scaled_sig_hef_id_upDown2) == "HEF"))])
-colnames(d3_hefmatrix) <- rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_3"), which(HSMM$cell_type=="HEF"))]
-d3_hef_colname_dataframe <- as.data.frame(HSMM$cell_type[c(which(HSMM$cell_type == "idc_3"), which(HSMM$cell_type == "HEF"))], row.names = rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_3"), which(HSMM$cell_type=="HEF"))])
-colnames(d3_hef_colname_dataframe) <- "Cell_type"
+plot_heatmap <- function(matrix, df) {
+  return_plot <- pheatmap(matrix, col=mycol, show_colnames = F, cutree_rows = 2, annotation_names_row = F,
+                          show_rownames = F, cluster_cols = F, annotation_col = df,
+                          clustering_distance_rows = "correlation",
+                          clustering_method = "ward.D2", annotation_names_col = F )
+}
 
-out_d3_hef_upDown <- pheatmap(d3_hefmatrix, col=mycol, show_colnames = F, cutree_rows = 2, annotation_names_row = F,
-                              show_rownames = F, cluster_cols = F, annotation_col = d3_hef_colname_dataframe,
-                              clustering_distance_rows = "correlation",
-                              clustering_method = "ward.D2", annotation_names_col = F )
-png(paste0("heatmaps/d3_hef_logFC",logFC, ".png"))
-print(out_d3_hef_upDown)
+idc3_hef <- make_matrix(deHEF_idc3, "idc_3", "HEF")
+idc3_hef_df <- make_datafram("idc_3", "HEF")
+png("heatmaps/d3_hef.png")
+print(plot_heatmap(idc3_hef, idc3_hef_df))
 dev.off()
 
-d3_hef_cluster <- list()
-d3_hef_cluster$Patways_up_day_3_vs_hef <- bitr(rownames(deHEF_idc3[deHEF_idc3$logFC.HEF.idc_3 > logFC, ]),
-                                               fromType = "SYMBOL", toType = "ENTREZID",
-                                               OrgDb = "org.Hs.eg.db")[,2]
-d3_hef_cluster$Patways_down_day_3_vs_hef <- bitr(rownames(deHEF_idc3[deHEF_idc3$logFC.HEF.idc_3 < -logFC, ]),
-                                                 fromType = "SYMBOL", toType = "ENTREZID",
-                                                 OrgDb = "org.Hs.eg.db")[,2]
-
-d3_hef_ck_CC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/d3_hef_ck_CC_logFC0.5.Rdata")
-d3_hef_ck_CC <- compareCluster(geneClusters = d3_hef_cluster, OrgDb="org.Hs.eg.db", ont="CC", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_hef_ck_CC","_logFC", logFC,".pdf"), width = 10, height = 12, useDingbats=FALSE)
-print(dotplot(d3_hef_ck_CC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-dev.off()
-write.table(as.data.frame(d3_hef_ck_CC), file=paste0("sign_pathway/d3_hef_ck_CC","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_hef_ck_CC, file=paste0("sign_pathway/d3_hef_ck_CC","_logFC", logFC,".Rdata"))
-# 
-# d3_hef_ck_MF <- compareCluster(geneClusters = d3_hef_cluster, OrgDb="org.Hs.eg.db", ont="MF", qvalueCutoff=0.05)
-# pdf(paste0("sign_pathway/d3_hef_ck_MF","_logFC", logFC,".pdf"), width = 15, height = 12, useDingbats=FALSE)
-# print(dotplot(d3_hef_ck_MF, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-# dev.off()
-# write.table(as.data.frame(d3_hef_ck_MF), file=paste0("sign_pathway/d3_hef_ck_MF","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-# saveRDS(d3_hef_ck_MF, file=paste0("sign_pathway/d3_hef_ck_MF","_logFC", logFC,".Rdata"))
-
-d3_hef_ck_BP <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d3_hef_ck_BP_logFC0.5.Rdata")
-d3_hef_ck_BP <- compareCluster(geneClusters = d3_hef_cluster, OrgDb="org.Hs.eg.db", ont="BP", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_hef_ck_BP","_logFC", logFC,".pdf"), width = 16, height = 12, useDingbats=FALSE)
-print(dotplot(d3_hef_ck_BP, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-dev.off()
-write.table(as.data.frame(d3_hef_ck_BP), file=paste0("sign_pathway/d3_hef_ck_BP","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_hef_ck_BP, file=paste0("sign_pathway/d3_hef_ck_BP","_logFC", logFC,".Rdata"))
-
-#####
-deHEF_idc9_logFC <- deHEF_idc9[abs(deHEF_idc9$logFC.HEF.idc_9) > logFC,]
-d9_hefmatrix <- as.matrix(counts_scaled_sig_hef_id_upDown2[rownames(deHEF_idc9_logFC),
-                                                         c(which(colnames(counts_scaled_sig_hef_id_upDown2) == "idc_9"),
-                                                           which(colnames(counts_scaled_sig_hef_id_upDown2) == "HEF"))])
-colnames(d9_hefmatrix) <- rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_9"), which(HSMM$cell_type=="HEF"))]
-d9_hef_colname_dataframe <- as.data.frame(HSMM$cell_type[c(which(HSMM$cell_type == "idc_9"), which(HSMM$cell_type == "HEF"))], row.names = rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_9"), which(HSMM$cell_type=="HEF"))])
-colnames(d9_hef_colname_dataframe) <- "Cell_type"
-
-out_d9_hef_upDown <- pheatmap(d9_hefmatrix, col=mycol, show_colnames = F, cutree_rows = 2, annotation_names_row = F,
-                            show_rownames = F, cluster_cols = F, annotation_col = d9_hef_colname_dataframe,
-                            clustering_distance_rows = "correlation",
-                            clustering_method = "ward.D2", annotation_names_col = F )
-png(paste0("heatmaps/d9_hef_logFC",logFC, ".png"))
-print(out_d9_hef_upDown)
+dc9_hef <- make_matrix(deHEF_idc9, "idc_9", "HEF")
+idc9_hef_df <- make_datafram("idc_9", "HEF")
+png("heatmaps/d9_hef.png")
+print(plot_heatmap(idc9_hef, idc9_hef_df))
 dev.off()
 
-d9_hef_cluster <- list()
-d9_hef_cluster$Patways_up_day_9_vs_hef <- bitr(rownames(deHEF_idc9[deHEF_idc9$logFC.HEF.idc_9 > logFC, ]),
-                                               fromType = "SYMBOL", toType = "ENTREZID",
-                                               OrgDb = "org.Hs.eg.db")[,2]
-d9_hef_cluster$Patways_down_day_9_vs_hef <- bitr(rownames(deHEF_idc9[deHEF_idc9$logFC.HEF.idc_9 < -logFC, ]),
-                                                 fromType = "SYMBOL", toType = "ENTREZID",
-                                                 OrgDb = "org.Hs.eg.db")[,2]
-
-d9_hef_ck_CC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_hef_ck_CC_logFC0.5.Rdata")
-d9_hef_ck_CC <- compareCluster(geneClusters = d9_hef_cluster, OrgDb="org.Hs.eg.db", ont="CC", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d9_hef_ck_CC","_logFC", logFC,".pdf"), width =9, height = 12, useDingbats=FALSE)
-print(dotplot(d9_hef_ck_CC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-dev.off()
-write.table(as.data.frame(d9_hef_ck_CC), file=paste0("sign_pathway/d9_hef_ck_CC","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_hef_ck_CC, file=paste0("sign_pathway/d9_hef_ck_CC","_logFC", logFC,".Rdata"))
-
-# d9_hef_ck_MF <- compareCluster(geneClusters = d9_hef_cluster, OrgDb="org.Hs.eg.db", ont="MF", qvalueCutoff=0.05)
-# pdf(paste0("sign_pathway/d9_hef_ck_MF","_logFC", logFC,".pdf"), width = 15, height = 12, useDingbats=FALSE)
-# print(dotplot(d9_hef_ck_MF, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-# dev.off()
-# write.table(as.data.frame(d9_hef_ck_MF), file=paste0("sign_pathway/d9_hef_ck_MF","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-# saveRDS(d9_hef_ck_MF, file=paste0("sign_pathway/d9_hef_ck_MF","_logFC", logFC,".Rdata"))
-
-d9_hef_ck_BP <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_hef_ck_BP_logFC0.5.Rdata")
-d9_hef_ck_BP <- compareCluster(geneClusters = d9_hef_cluster, OrgDb="org.Hs.eg.db", ont="BP", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d9_hef_ck_BP","_logFC", logFC,".pdf"), width = 13, height = 12, useDingbats=FALSE)
-print(dotplot(d9_hef_ck_BP, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-dev.off()
-write.table(as.data.frame(d9_hef_ck_BP), file=paste0("sign_pathway/d9_hef_ck_BP","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_hef_ck_BP, file=paste0("sign_pathway/d9_hef_ck_BP","_logFC", logFC,".Rdata"))
-
-########
-deidc3_idc9_logFC <- deidc3_idc9[abs(deidc3_idc9$logFC.idc_3.idc_9) > logFC,]
-d3_day9_matrix <- as.matrix(counts_scaled_sig_hef_id_upDown2[rownames(deidc3_idc9_logFC),
-                                                         c(which(colnames(counts_scaled_sig_hef_id_upDown2) == "idc_3"),
-                                                           which(colnames(counts_scaled_sig_hef_id_upDown2) == "idc_9"))])
-colnames(d3_day9_matrix) <- rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_3"), which(HSMM$cell_type=="idc_9"))]
-d3_d9_colname_dataframe <- as.data.frame(HSMM$cell_type[c(which(HSMM$cell_type == "idc_3"), which(HSMM$cell_type == "idc_9"))], row.names = rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_3"), which(HSMM$cell_type=="idc_9"))])
-colnames(d3_d9_colname_dataframe) <- "Cell_type"
-
-out_d3_d9_upDown <- pheatmap(d3_day9_matrix, col=mycol, show_colnames = F, cutree_rows = 2, annotation_names_row = F,
-                           show_rownames = F, cluster_cols = F, annotation_col = d3_d9_colname_dataframe,
-                           clustering_distance_rows = "correlation",
-                           clustering_method = "ward.D2", annotation_names_col = F )
-
-png(paste0("heatmaps/d9_d3_logFC",logFC, ".png"))
-print(out_d3_d9_upDown)
+idc9_idc3 <- make_matrix(deidc3_idc9, "idc_9", "idc_3")
+idc9_idc3_df <- make_datafram("idc_9", "idc_3")
+png("heatmaps/d9_d3.png")
+print(plot_heatmap(idc9_idc3, idc9_idc3_df))
 dev.off()
 
-d3_d9_cluster <- list()
-d3_d9_cluster$Patways_up_day_9_vs_day_3 <- bitr(rownames(deidc3_idc9[deidc3_idc9$logFC.idc_3.idc_9 > logFC, ]),
-                                                fromType = "SYMBOL", toType = "ENTREZID",
-                                                OrgDb = "org.Hs.eg.db")[,2]
-d3_d9_cluster$Patways_down_day_9_vs_day_3 <- bitr(rownames(deidc3_idc9[deidc3_idc9$logFC.idc_3.idc_9 < -logFC, ]),
-                                                  fromType = "SYMBOL", toType = "ENTREZID",
-                                                  OrgDb = "org.Hs.eg.db")[,2]
-
-d3_d9_ck_CC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d3_d9_ck_CC_logFC0.5.Rdata")
-d3_d9_ck_CC <- compareCluster(geneClusters = d3_d9_cluster, OrgDb="org.Hs.eg.db", ont="CC", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_d9_ck_CC","_logFC", logFC,".pdf"), width = 9, height = 12, useDingbats=FALSE)
-print(dotplot(d3_d9_ck_CC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+idc9_cDC1 <- make_matrix(ded9_cDC1, "idc_9", "cDC1")
+idc9_cDC1_df <- make_datafram("idc_9", "cDC1")
+png("heatmaps/d9_cDC1.png")
+print(plot_heatmap(idc9_cDC1, idc9_cDC1_df))
 dev.off()
-write.table(as.data.frame(d3_d9_ck_CC), file=paste0("sign_pathway/d3_d9_ck_CC","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_d9_ck_CC, file=paste0("sign_pathway/d3_d9_ck_CC","_logFC", logFC,".Rdata"))
 
-# d3_d9_ck_MF <- compareCluster(geneClusters = d3_d9_cluster, OrgDb="org.Hs.eg.db", ont="MF", qvalueCutoff=0.05)
-# pdf(paste0("sign_pathway/d3_d9_ck_MF","_logFC", logFC,".pdf"), width = 15, height = 12, useDingbats=FALSE)
-# print(dotplot(d3_d9_ck_MF, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-# dev.off()
-# write.table(as.data.frame(d3_d9_ck_MF), file=paste0("sign_pathway/d3_d9_ck_MF","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-# saveRDS(d3_d9_ck_MF, file=paste0("sign_pathway/d3_d9_ck_MF","_logFC", logFC,".Rdata"))
+## Pathway analysis:
+define_cluster <- function(x, logFC) {
+  cluster <- list()
+  cluster$Patways_up <- bitr(rownames(x[x[,1] > logFC, ]),
+                             fromType = "SYMBOL", toType = "ENTREZID",
+                             OrgDb = "org.Hs.eg.db")[,2]
+  cluster$Patways_down <-  bitr(rownames(x[x[,1] < -logFC, ]),
+                                fromType = "SYMBOL", toType = "ENTREZID",
+                                OrgDb = "org.Hs.eg.db")[,2]
+  return(cluster)
+}
 
-d3_d9_ck_BP <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d3_d9_ck_BP_logFC0.5.Rdata")
-d3_d9_ck_BP <- compareCluster(geneClusters = d3_d9_cluster, OrgDb="org.Hs.eg.db", ont="BP", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_d9_ck_BP","_logFC", logFC,".pdf"), width = 15, height = 12, useDingbats=FALSE)
-print(dotplot(d3_d9_ck_BP, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+d3_hef_cluster <- define_cluster(deHEF_idc3, 0.5)
+d9_hef_cluster <- define_cluster(gdeHEF_idc9, 0.5)
+d9_d3_cluster <- define_cluster(deidc3_idc9, 0.5)
+d9_cDC1_cluster <- define_cluster(ded9_cDC1, 0.5)
+
+## GO pathway
+pathway_analysis <- function(x, ont, name) {
+  results <- compareCluster(geneClusters = x, fun="enrichGO", OrgDb="org.Hs.eg.db", ont=ont, qvalueCutoff=0.05)
+  saveRDS(results, file=paste0("sign_pathway/Rdata/", name, "_", ont, ".Rdata"))
+  write.table(as.data.frame(results), file=paste0("sign_pathway/text_files/", name, "_", ont ,".results.txt"), quote = F, row.names = T, sep="\t")
+  return(results)
+}
+
+### CC
+
+#d3_hef_CC <- pathway_analysis(d3_hef_cluster, "CC", "d3_hef")
+d3_hef_CC <- readRDS("sign_pathway/Rdata/d3_hef_CC.Rdata")
+pdf("sign_pathway/plot/d3_hef_CC.pdf", width = 10, height = 12, useDingbats=FALSE)
+dotplot(d3_hef_CC, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d3_d9_ck_BP), file=paste0("sign_pathway/d3_d9_ck_BP","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_d9_ck_BP, file=paste0("sign_pathway/d3_d9_ck_BP","_logFC", logFC,".Rdata"))
 
-
-#####
-ded9_cDC1_logFC <- ded9_cDC1[abs(ded9_cDC1$logFC.cDC1.idc_9) > logFC,]
-d9_cDC1_matrix <- as.matrix(counts_scaled_sig_hef_id_upDown2[rownames(ded9_cDC1_logFC),
-                                                         c(which(colnames(counts_scaled_sig_hef_id_upDown2) == "idc_9"),
-                                                           which(colnames(counts_scaled_sig_hef_id_upDown2) == "cDC1"))])
-colnames(d9_cDC1_matrix) <- rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_9"), which(HSMM$cell_type=="cDC1"))]
-d9_cDC1_colname_dataframe <- as.data.frame(HSMM$cell_type[c(which(HSMM$cell_type == "idc_9"), which(HSMM$cell_type == "cDC1"))], row.names = rownames(pData(HSMM))[c(which(HSMM$cell_type=="idc_9"), which(HSMM$cell_type=="cDC1"))])
-colnames(d9_cDC1_colname_dataframe) <- "Cell_type"
-
-out_d9_cDC1_upDown <- pheatmap(d9_cDC1_matrix, col=mycol, show_colnames = F, cutree_rows = 2, annotation_names_row = F,
-                           show_rownames = F, cluster_cols = F, annotation_col = d9_cDC1_colname_dataframe,
-                           clustering_distance_rows = "correlation",
-                           clustering_method = "ward.D2", annotation_names_col = F )
-
-png(paste0("heatmaps/d9_cDC1_logFC",logFC, ".png"))
-print(out_d9_cDC1_upDown)
+#### Day 9 vs Hef
+#d9_hef_CC <- pathway_analysis(d9_hef_cluster, "CC", name="d9_hef")
+d9_hef_CC <- readRDS("sign_pathway/Rdata/d9_hef_CC.Rdata")
+pdf("sign_pathway/d9_hef_CC.pdf", width =9, height = 12, useDingbats=FALSE)
+dotplot(d9_hef_CC, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-d9_cDC1_cluster <- list()
-d9_cDC1_cluster$Patways_up_day_9_vs_cDC1 <- bitr(rownames(ded9_cDC1[ded9_cDC1$logFC.cDC1.idc_9 > logFC, ]),
-                                                 fromType = "SYMBOL", toType = "ENTREZID",
-                                                 OrgDb = "org.Hs.eg.db")[,2]
-d9_cDC1_cluster$Patways_down_day_9_vs_cDC1 <- bitr(rownames(ded9_cDC1[ded9_cDC1$logFC.cDC1.idc_9 < -logFC, ]),
-                                                   fromType = "SYMBOL", toType = "ENTREZID",
-                                                   OrgDb = "org.Hs.eg.db")[,2]
 
-d9_cDC1_ck_CC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_cDC1_ck_CC_logFC0.5.Rdata")
-d9_cDC1_ck_CC <- compareCluster(geneClusters = d9_cDC1_cluster, OrgDb="org.Hs.eg.db", ont="CC", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d9_cDC1_ck_CC","_logFC", logFC,".pdf"), width = 9, height = 12, useDingbats=FALSE)
-print(dotplot(d9_cDC1_ck_CC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+#### Day 9 vs Day 3
+#d9_d3_CC <- pathway_analysis(d9_d3_cluster, "CC", name="d9_d3")
+d9_d3_CC <- readRDS("sign_pathway/Rdata/d9_d3_CC.Rdata")
+pdf("sign_pathway/d3_d9_CC.pdf", width = 9, height = 12, useDingbats=FALSE)
+dotplot(d9_d3_CC, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d9_cDC1_ck_CC), file=paste0("sign_pathway/d9_cDC1_ck_CC","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_cDC1_ck_CC, file=paste0("sign_pathway/d9_cDC1_ck_CC","_logFC", logFC,".Rdata"))
 
-# d9_cDC1_ck_MF <- compareCluster(geneClusters = d9_cDC1_cluster, OrgDb="org.Hs.eg.db", ont="MF", qvalueCutoff=0.05)
-# pdf(paste0("sign_pathway/d9_cDC1_ck_MF","_logFC", logFC,".pdf"), width = 15, height = 12, useDingbats=FALSE)
-# print(dotplot(d9_cDC1_ck_MF, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
-# dev.off()
-# write.table(as.data.frame(d9_cDC1_ck_MF), file=paste0("sign_pathway/d9_cDC1_ck_MF","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-# saveRDS(d9_cDC1_ck_MF, file=paste0("sign_pathway/d9_cDC1_ck_MF","_logFC", logFC,".Rdata"))
-
-d9_cDC1_ck_BP <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_cDC1_ck_BP_logFC0.5.Rdata")
-d9_cDC1_ck_BP <- compareCluster(geneClusters = d9_cDC1_cluster, OrgDb="org.Hs.eg.db", ont="ALL", qvalueCutoff=0.05, pool=T)
-pdf(paste0("sign_pathway/d9_cDC1_ck_BP","_logFC", logFC,"_vol2.pdf"), width = 14, height = 12, useDingbats=FALSE)
-print(dotplot(d9_cDC1_ck_BP, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+#### Day 9 vs cDC1
+#d9_cDC1_CC <- pathway_analysis(d9_cDC1_cluster, "CC", name="d9_cDC1")
+d9_cDC1_CC <- readRDS("sign_pathway/Rdata/d9_cDC1_CC.Rdata")
+pdf("sign_pathway/d9_cDC1_CC.pdf", width = 9, height = 12, useDingbats=FALSE)
+dotplot(d9_cDC1_CC, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d9_cDC1_ck_BP), file=paste0("sign_pathway/d9_cDC1_ck_BP","_logFC", logFC,".results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_cDC1_ck_BP, file=paste0("sign_pathway/d9_cDC1_ck_BP","_logFC", logFC,".Rdata"))
 
-######
-
-d3_mef_ck_kegg_logFC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d3_hef_logFC0.5_KEGG.Rdata")
-d3_mef_ck_kegg_logFC <- compareCluster(geneClusters = d3_hef_cluster, fun="enrichKEGG", organism="hsa", keyType="kegg", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_hef_logFC", logFC, "_KEGG.pdf"), width = 11, height = 14, useDingbats=FALSE)
-print(dotplot(d3_mef_ck_kegg_logFC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+### BP
+#d3_hef_BP <- pathway_analysis(d3_hef_cluster, "BP", "d3_hef")
+d3_hef_BP <- readRDS("sign_pathway/Rdata/3_hef_BP.Rdata")
+pdf("sign_pathway/d3_hef_BP.pdf", width = 16, height = 12, useDingbats=FALSE)
+dotplot(d3_hef_BP, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d3_mef_ck_kegg_logFC), file=paste0("sign_pathway/d3_hef_logFC", logFC, "_KEGG_results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_mef_ck_kegg_logFC, file=paste0("sign_pathway/d3_hef_logFC", logFC, "_","KEGG.Rdata"))
 
-d9_mef_ck_kegg_logFC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_hef_logFC0.5_KEGG.Rdata")
-d9_mef_ck_kegg_logFC <- compareCluster(geneClusters = d9_hef_cluster, fun="enrichKEGG", organism="hsa", keyType="kegg", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d9_hef_logFC", logFC, "_KEGG.pdf"), width = 9, height = 14, useDingbats=FALSE)
-print(dotplot(d9_mef_ck_kegg_logFC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+#### Day 9 vs Hefs 
+#d9_hef_BP <- pathway_analysis(d9_hef_cluster, "BP", "d9_hef")
+d9_hef_BP <- readRDS("sign_pathway/Rdata/d9_hef_BP.Rdata")
+pdf("sign_pathway/d9_hef_BP.pdf", width = 13, height = 12, useDingbats=FALSE)
+dotplot(d9_hef_BP, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d9_mef_ck_kegg_logFC), file=paste0("sign_pathway/d9_hef_logFC", logFC, "_KEGG_results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_mef_ck_kegg_logFC, file=paste0("sign_pathway/d9_hef_logFC", logFC, "_","KEGG.Rdata"))
 
-d3_d9_ck_kegg_logFC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d3_d9_logFC0.5_KEGG.Rdata")
-d3_d9_ck_kegg_logFC <- compareCluster(geneClusters = d3_d9_cluster, fun="enrichKEGG", organism="hsa", keyType="kegg", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d3_d9_logFC", logFC, "_KEGG.pdf"), width = 9, height = 14, useDingbats=FALSE)
-print(dotplot(d3_d9_ck_kegg_logFC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+#### Day 9 vs Day 3
+#d9_d3_BP <- pathway_analysis(d9_d3_cluster, "BP", "d9_d3")
+d9_d3_BP <- readRDS("sign_pathway/Rdata/d9_d3_BP.Rdata")
+pdf("sign_pathway/d3_d9_BP.pdf", width = 15, height = 12, useDingbats=FALSE)
+dotplot(d9_d3_BP, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d3_d9_ck_kegg_logFC), file=paste0("sign_pathway/d3_d9_logFC", logFC, "_KEGG_results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d3_d9_ck_kegg_logFC, file=paste0("sign_pathway/d3_d9_logFC", logFC, "_","KEGG.Rdata"))
 
-d9_cDC1_ck_kegg_logFC <- readRDS("~/Documents/Lund/Vor2018_Haust2014/SingleCell/output_pathway_analysis/sign_pathway/Rdata/d9_cDC1_logFC0.5_KEGG.Rdata")
-d9_cDC1_ck_kegg_logFC <- compareCluster(geneClusters = d9_cDC1_cluster, fun="enrichKEGG", organism="hsa", keyType="kegg", qvalueCutoff=0.05)
-pdf(paste0("sign_pathway/d9_cDC1_logFC", logFC, "_KEGG.pdf"), width = 8, height = 14, useDingbats=FALSE)
-print(dotplot(d9_cDC1_ck_kegg_logFC, showCategory=5, font.size =24) + theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+#### Day 9 vs cDC1
+#d9_cDC1_BP <- pathway_analysis(d9_cDC1_cluster, "BP", "d9_cDC1")
+d9_cDC1_BP <- readRDS("sign_pathway/Rdata/d9_cDC1_BP.Rdata")
+pdf("sign_pathway/d9_cDC1_BP_vol2.pdf", width = 14, height = 12, useDingbats=FALSE)
+dotplot(d9_cDC1_BP, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
-write.table(as.data.frame(d9_cDC1_ck_kegg_logFC), file=paste0("sign_pathway/d9_cDC1_logFC", logFC, "_KEGG_results.txt"), quote = F, row.names = T, sep="\t")
-saveRDS(d9_cDC1_ck_kegg_logFC, file=paste0("sign_pathway/d9_cDC1_logFC", logFC, "_","KEGG.Rdata"))
+
+### KEGG pathway analysis
+KEGG_pathway_analysis <- function(x, name) {
+  results <- compareCluster(geneClusters = x, fun="enrichKEGG", organism="hsa", keyType="kegg", qvalueCutoff=0.05)
+  saveRDS(results, file=paste0("sign_pathway/Rdata/", name, "_", "KEGG.Rdata"))
+  write.table(as.data.frame(results), file=paste0("sign_pathway/text_files/", namw, "_KEGG_results.txt"), quote = F, row.names = T, sep="\t")
+  return(results)
+}
+
+### Day 3 vs Hefs
+#d3_hef_KEGG <- KEGG_pathway_analysis(d3_hef_cluster, name="d3_hef")
+d3_hef_KEGG <- readRDS("sign_pathway/Rdata/d3_hef_KEGG.Rdata")
+pdf("sign_pathway/d3_hef_KEGG.pdf", width = 11, height = 14, useDingbats=FALSE)
+dotplot(d3_hef_KEGG, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
+
+### Day 9 vs Hefs
+#d9_hef_KEGG <- KEGG_pathway_analysis(d9_hef_cluster, name="d9_hef")
+d9_hef_KEGG <- readRDS("sign_pathway/Rdata/d9_hef_KEGG.Rdata")
+pdf("sign_pathway/d9_hef_KEGG.pdf", width = 9, height = 14, useDingbats=FALSE)
+dotplot(d9_hef_KEGG, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
+
+### Day 9 vs day 3
+#d9_d3_KEGG <- KEGG_pathway_analysis(d9_d3_cluster, name="d9_d3")
+d9_d3_KEGG <- readRDS("sign_pathway/Rdata/d9_d3_KEGG.Rdata")
+pdf("sign_pathway/d3_d9_KEGG.pdf", width = 9, height = 14, useDingbats=FALSE)
+dotplot(d9_d3_KEGG, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
+
+### Day 9 vs cDC1
+#d9_cDC1_KEGG <- KEGG_pathway_analysis(d9_cDC1_cluster, name="d9_cDC1")
+d9_cDC1_KEGG <- readRDS("sign_pathway/Rdata/d9_cDC1_KEGG.Rdata")
+pdf("sign_pathway/d9_cDC1_KEGG.pdf", width = 8, height = 14, useDingbats=FALSE)
+dotplot(d9_cDC1_KEGG, showCategory=5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+dev.off()
 
 
 #### KEGG pathways
