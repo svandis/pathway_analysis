@@ -68,12 +68,12 @@ for (i in 1:length(gene_list_sel)) {
   cbPalette=c("grey", "darkgoldenrod3", "darkred", "dodgerblue4","darkgreen", "darkorchid4")
   
   pdf(paste0("~/Downloads/", gene_list_sel[i], "_exp.pdf"))
-  print(monocle::plot_genes_jitter(cds_subset=cds_subset,
+  print(monocle::plot_genes_violin(cds_subset=cds_subset,
                              grouping = "cell_type",
                              color_by = "cell_type",
                              nrow= 2,
                              ncol = NULL,
-                             plot_trend = TRUE,  panel_order=gene_list_sel)+ scale_color_manual(values = cbPalette))
+                             plot_trend = TRUE,  panel_order=gene_list_sel)+ scale_fill_manual(values = cbPalette))
   dev.off()
   
 }
