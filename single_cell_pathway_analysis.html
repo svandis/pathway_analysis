@@ -786,6 +786,54 @@ d9_cDC1_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span
 </div>
 </div>
 </div>
+<div id="plotting-gene-expression-of-indivitual-genes" class="section level1">
+<h1>5 Plotting gene expression of indivitual genes</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gene_list_sel &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;CTSS&quot;</span>,<span class="st">&quot;CD68&quot;</span>, <span class="st">&quot;M6PR&quot;</span>, <span class="st">&quot;MCL1&quot;</span>, <span class="st">&quot;LAMP2&quot;</span>, <span class="st">&quot;LRRK2&quot;</span>, <span class="st">&quot;MYD88&quot;</span>, <span class="st">&quot;TICAM1&quot;</span>, <span class="st">&quot;TFEC&quot;</span>, <span class="st">&quot;STAT1&quot;</span>)
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(gene_list_sel)) {
+  to_be_tested &lt;-<span class="st"> </span><span class="kw">row.names</span>(<span class="kw">subset</span>(<span class="kw">fData</span>(HSMM),
+                                   gene_short_name <span class="op">%in%</span><span class="st"> </span>gene_list_sel[i]))
+  cds_subset &lt;-<span class="st"> </span>HSMM[to_be_tested,]
+  cds_subset<span class="op">$</span>cell_type &lt;-<span class="st"> </span><span class="kw">factor</span>(cds_subset<span class="op">$</span>cell_typ, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;HEF&quot;</span>, <span class="st">&quot;idc_3&quot;</span>, <span class="st">&quot;idc_9&quot;</span>, <span class="st">&quot;cDC1&quot;</span>, <span class="st">&quot;cDC2&quot;</span>, <span class="st">&quot;pDC&quot;</span>))
+  
+  cbPalette=<span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;darkgoldenrod3&quot;</span>, <span class="st">&quot;darkred&quot;</span>, <span class="st">&quot;dodgerblue4&quot;</span>,<span class="st">&quot;darkgreen&quot;</span>, <span class="st">&quot;darkorchid4&quot;</span>)
+  <span class="kw">print</span>(monocle<span class="op">::</span><span class="kw">plot_genes_violin</span>(<span class="dt">cds_subset=</span>cds_subset,
+                             <span class="dt">grouping =</span> <span class="st">&quot;cell_type&quot;</span>,
+                             <span class="dt">color_by =</span> <span class="st">&quot;cell_type&quot;</span>,
+                             <span class="dt">nrow=</span> <span class="dv">2</span>,
+                             <span class="dt">ncol =</span> <span class="ot">NULL</span>,
+                             <span class="dt">plot_trend =</span> <span class="ot">TRUE</span>,  <span class="dt">panel_order=</span>gene_list_sel)<span class="op">+</span><span class="st"> </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> cbPalette))
+}</code></pre></div>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-4.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-5.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-6.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-7.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-8.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-9.png" width="672" /></p>
+<pre><code>## geom_path: Each group consists of only one observation. Do you need to
+## adjust the group aesthetic?</code></pre>
+<p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-10.png" width="672" /></p>
+</div>
 
 
 
