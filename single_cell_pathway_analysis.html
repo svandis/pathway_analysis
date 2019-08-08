@@ -834,6 +834,71 @@ d9_cDC1_KEGG &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span
 ## adjust the group aesthetic?</code></pre>
 <p><img src="single_cell_pathway_analysis_files/figure-html/unnamed-chunk-1-10.png" width="672" /></p>
 </div>
+<div id="volocyto" class="section level1">
+<h1>6 Volocyto</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># library(velocyto.R)</span>
+<span class="co"># library(pagoda2)</span>
+<span class="co"># seurat.object.final = pbmc.idc</span>
+<span class="co"># ldat &lt;- read.loom.matrices(&quot;~/Downloads/merge.loom&quot;)</span>
+<span class="co"># </span>
+<span class="co"># emat &lt;- ldat$spliced</span>
+<span class="co"># nmat &lt;- ldat$unspliced</span>
+<span class="co"># </span>
+<span class="co"># type_run &lt;- unlist(strsplit(colnames(emat),&quot;:&quot;))[seq(1,dim(emat)[2]*2,2)]</span>
+<span class="co"># cells_table &lt;- unlist(strsplit(colnames(emat),&quot;:&quot;))[seq(2,dim(emat)[2]*2,2)]</span>
+<span class="co"># value.iter = 0</span>
+<span class="co"># new_cols = c()</span>
+<span class="co"># for (i in 1:length(type_run)){</span>
+<span class="co">#   value.iter = value.iter + 1</span>
+<span class="co">#   if (type_run[i] == &quot;hef_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-1&quot;))</span>
+<span class="co">#   } else if (type_run[i] == &quot;cd45d3_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-2&quot;))</span>
+<span class="co">#   } else if (type_run[i] == &quot;cd45d9_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-3&quot;))</span>
+<span class="co">#   } else if (type_run[i] == &quot;cd141v3_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-4&quot;))</span>
+<span class="co">#   } else if (type_run[i] == &quot;cd1c_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-5&quot;))</span>
+<span class="co">#   } else if (type_run[i] == &quot;cd123_run&quot;){</span>
+<span class="co">#       new_cols = c(new_cols,paste0(unlist(strsplit(cells_table[i],&quot;x&quot;)),&quot;-6&quot;))</span>
+<span class="co">#   } else {</span>
+<span class="co">#       new_cols = c(new_cols,paste0(&quot;X&quot;,value.iter))</span>
+<span class="co">#   }  </span>
+<span class="co"># }</span>
+<span class="co"># </span>
+<span class="co"># colnames(emat) = new_cols</span>
+<span class="co"># colnames(nmat) = new_cols</span>
+<span class="co"># </span>
+<span class="co"># emat &lt;- emat[,rownames(seurat.object.final@meta.data)]; </span>
+<span class="co"># nmat &lt;- nmat[,rownames(seurat.object.final@meta.data)]; </span>
+<span class="co"># </span>
+<span class="co"># seurat.object.final &lt;- FindNeighbors(object = seurat.object.final, dims = 1:sel.dim2)</span>
+<span class="co"># seurat.object.final &lt;- FindClusters(object = seurat.object.final, resolution = 0.2)</span>
+<span class="co"># </span>
+<span class="co"># #cluster.label &lt;- seurat.object.final@active.ident</span>
+<span class="co"># cluster.label &lt;- as.factor(as.numeric(seurat.object.final@meta.data$cell_type))</span>
+<span class="co"># names(cluster.label) = rownames(seurat.object.final@meta.data)</span>
+<span class="co"># #cell.colors &lt;- pagoda2:::fac2col(cluster.label)</span>
+<span class="co"># all.gamma = c(&quot;#A9A8A6&quot;,&quot;#EFA46A&quot;,&quot;#C22D2D&quot;,&quot;#2A6DA1&quot;,&quot;#58AE69&quot;,&quot;#875F98&quot;)</span>
+<span class="co"># cell.colors = c()</span>
+<span class="co"># for (i in 1:length(cluster.label)){</span>
+<span class="co">#   cell.colors = c(cell.colors, all.gamma[as.numeric(cluster.label[i])])</span>
+<span class="co">#   }</span>
+<span class="co"># names(cell.colors) = rownames(seurat.object.final@meta.data)</span>
+<span class="co"># </span>
+<span class="co"># emb &lt;- seurat.object.final@reductions$tsne@cell.embeddings</span>
+<span class="co"># cell.dist &lt;- as.dist(1-armaCor(t(seurat.object.final@reductions$pca@cell.embeddings)))</span>
+<span class="co"># </span>
+<span class="co"># emat &lt;- filter.genes.by.cluster.expression(emat,cluster.label,min.max.cluster.average = 0.5)</span>
+<span class="co"># nmat &lt;- filter.genes.by.cluster.expression(nmat,cluster.label,min.max.cluster.average = 0.05)</span>
+<span class="co"># </span>
+<span class="co"># fit.quantile &lt;- 0.02</span>
+<span class="co"># rvel.cd &lt;- gene.relative.velocity.estimates(emat,nmat,deltaT=1,kCells=20,cell.dist=cell.dist,fit.quantile=fit.quantile)</span>
+<span class="co"># </span>
+<span class="co"># show.velocity.on.embedding.cor(emb,rvel.cd,n=300,scale=&#39;sqrt&#39;,cell.colors=ac(cell.colors,alpha=0.5),cex=0.8,arrow.scale=5,show.grid.flow=TRUE,min.grid.cell.mass=0.5,grid.n=40,arrow.lwd=1,do.par=F,cell.border.alpha = 0.1)</span></code></pre></div>
+<p><img src="load_obj/Velocity.garnett.cells.png" style="width:100.0%" /> # The end 3</p>
+</div>
 
 
 
